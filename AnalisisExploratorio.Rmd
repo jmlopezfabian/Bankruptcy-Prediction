@@ -1,0 +1,188 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code.
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*.
+
+```{r}
+plot(cars)
+```
+
+```{r}
+library(ggplot2)
+#library(DMwR)
+#library(devtools)
+library(corrplot)
+library(PerformanceAnalytics)
+```
+
+```{r}
+data <- read.csv('/home/jesus/ProyectoProgramacionCD/Data/data.csv')
+
+dimensiones <- dim(data)
+cat("El conjunto de datos tiene",dimensiones[2],"instancias y", dimensiones[1]
+    ,"registros")
+
+null_counts <- colSums(is.na(data))
+duplicated_count <- sum(duplicated(data))
+
+cat("Numero de registros nulos: ", sum(null_counts))
+cat('\n',"Numero de registros duplicados: ", duplicated_count)
+#No hay duplicados ni valores nulos en el dataframe
+```
+
+```{r}
+summary(data)
+#Todas las 96 columnas son de tipo numeric o integer
+
+value_counts <- table(data$Bankrupt.)
+
+cat("Número compañias que no estan en bancarrota: ",value_counts[1])
+cat("Número compañias en bancarrota: ",value_counts[2])
+
+ggplot(data, aes(x = data$Bankrupt.)) +
+  geom_bar() + labs(title = "Bankrupt?"
+```
+
+```{r}
+#Hay un desvalance en el Target Value
+
+categorical_features <- names(data)[sapply(data,is.integer)]
+numeric_features <- names(data)[sapply(data,is.numeric) & !names(data) %in% categorical_features]
+
+#Hay 3 variables categoricas, vamos a explorar estas columnas primero.
+```
+
+```{r}
+#Liability.Assets.Flag se refiere al estado de una organizacion, si el
+#total de pasivos excede el total de activos, el valor sera 1, en caso contrario
+#sera 0
+
+liability_assets_flag <- table(data$'Liability.Assets.Flag')
+cat("Pasivos excede activos: ",liability_assets_flag[1])
+cat("Pasivos NO excede activos: ",liability_assets_flag[2])
+ggplot(data, aes(x = data$Liability.Assets.Flag)) + geom_bar()
+#Los activos de la gran mayoria de compañias supera sus pasivos.
+
+
+#Comparacion con empresas en bancarrota
+
+print(table(data[c('Liability.Assets.Flag','Bankrupt.')]))
+```
+
+```{r}
+#Una pequeña porcion de las organizaciones esta banca rota, a pesar de que sus
+#activos superan sus pasivos.
+
+#No es determinante para nuestro objetivo.
+
+
+net_income_flag_count <- table(data$Net.Income.Flag)
+print(net_income_flag_count)
+#Todas las empresas tienen perdidas en los dos años anteriores.
+
+#Muchas de las organizaciones que han presentado perdidas durante los ultimos dos
+#años han establezido su negocio.
+
+print(table(data[c('Net.Income.Flag','Bankrupt.')]))
+```
+
+```{r}
+matriz_correlacion <- cor(data)
+print(matriz_correlacion)
+```
+
+Correlación negativa
+
+Gross profit to sales - Operating gross margin (Perfecta)
+
+Gross profit to sales - Ralized sales gross margin (Alta)
+
+Operating Funds to Liability - Cash Flow rate (Alta)
+
+Borrowing dependency - Liability to Equity (Moderada)
+
+Debt ratio % - Current liability to assets ( Moderada)
+
+```{r}
+#Correlaciones Postivas
+print(cor(data$Gross.Profit.to.Sales, data$Operating.Gross.Margin))
+
+print(cor(data$Gross.Profit.to.Sales, data$Realized.Sales.Gross.Margin))
+
+print(cor(data$Operating.Funds.to.Liability, data$Cash.flow.rate))
+
+print(cor(data$Borrowing.dependency, data$Liability.to.Equity))
+
+print(cor(data$Debt.ratio.., data$Current.Liability.to.Assets))
+
+```
+
+Correlacion positiva
+
+debt ratio  - Net wort/assets
+
+Liability to equity - Net Incme to stockholders equity
+
+borronwy dependency - Net Income to stockholders equity
+
+working capital - Equity current liability to equity
+
+operating profit rate - non industry income and expenditure revenue
+
+current liability equity - borronwy dependency
+
+```{r}
+print(cor(data$Debt.ratio..,data$Net.worth.Assets))
+
+print(cor(data$Liability.to.Equity, data$Net.Income.to.Stockholder.s.Equity))
+
+print(cor(data$Borrowing.dependency, data$Net.Income.to.Stockholder.s.Equity))
+
+print(cor(data$Working.Capital.Equity, data$Current.Liability.to.Equity))
+
+print(cor(data$Operating.Profit.Rate, data$Non.industry.income.and.expenditure.revenue))
+
+print(cor(data$Current.Liability.to.Equity, data$Borrowing.dependency))
+
+print(cor(data$Working.Capital.to.Total.Assets,data$Debt.ratio..))
+
+print(cor(data$Cash.Total.Assets, data$Debt.ratio..))
+
+```
+
+Creando un nuevo data frame con las nuevas variables
+
+```{r}
+new_dataframe <- data.frame(
+  Gross.Profit.to.Sales = data$Gross.Profit.to.Sales,
+  Operating.Gross.Margin = data$Operating.Gross.Margin,
+  Realized.Sales.Gross.Margin = data$Realized.Sales.Gross.Margin,
+  Operating.Funds.to.Liability = data$Operating.Funds.to.Liability,
+  Cash.Flow.rate = data$Cash.flow.rate,
+  Borrowing.dependency = data$Borrowing.dependency,
+  Liability.to.Equity = data$Liability.to.Equity,
+  Deb.ratio.. = data$Debt.ratio..,
+  Current.Liability.to.Assets = data$Current.Liability.to.Assets,
+  Net.worth.Assets = data$Net.worth.Assets,
+  Net.Income.to.Stockholders.s.Equity = data$Net.Income.to.Stockholder.s.Equity,
+  Borrowing.dependency = data$Borrowing.dependency,
+  Working.Capital.Equity = data$Working.Capital.Equity,
+  Current.Liability.to.Equity = data$Current.Liability.to.Equity
+)
+
+print(new_dataframe)
+```
+
+```{r}
+cor(new_dataframe)
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
