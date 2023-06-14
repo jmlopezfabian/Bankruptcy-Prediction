@@ -20,7 +20,7 @@ library(PerformanceAnalytics)
 ```
 
 ```{r}
-data <- read.csv('/home/jesus/ProyectoProgramacionCD/Data/data.csv')
+data <- read.csv('/home/jesus/Bankruptcy-Prediction/Data/data.csv')
 
 dimensiones <- dim(data)
 cat("El conjunto de datos tiene",dimensiones[2],"instancias y", dimensiones[1]
@@ -44,7 +44,7 @@ cat("Número compañias que no estan en bancarrota: ",value_counts[1])
 cat("Número compañias en bancarrota: ",value_counts[2])
 
 ggplot(data, aes(x = data$Bankrupt.)) +
-  geom_bar() + labs(title = "Bankrupt?"
+  geom_bar() + labs(title = "Bankrupt?")
 ```
 
 ```{r}
