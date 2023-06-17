@@ -6,8 +6,12 @@ library(PerformanceAnalytics)
 library(nortest)
 library(randomForest)
 library(caret)
+library(rpart)
 
-data <- read.csv('/home/jesus/Bankruptcy-Prediction/Data/data.csv')
+#data <- read.csv('/home/jesus/Bankruptcy-Prediction/Data/data.csv')
+
+data <- read.csv('/home/jesus/Bankruptcy-Prediction/Data/data_resampled.csv')
+
 
 dimensiones <- dim(data)
 cat("El conjunto de datos tiene",dimensiones[2],"instancias y", dimensiones[1]
@@ -61,7 +65,6 @@ borrar <- c("Operating.Profit.Rate","Pre.tax.net.Interest.Rate",
             "Regular.Net.Profit.Growth.Rate", "Continuous.Net.Profit.Growth.Rate",
             "Net.Value.Growth.Rate","Total.Asset.Return.Growth.Rate.Ratio",
             "Current.Ratio","Quick.Ratio","Interest.Expense.Ratio",""
-            
             )
 
 data$Interest.Expense.Ratio
@@ -88,27 +91,97 @@ new_df <- data[,c("Bankrupt.","Persistent.EPS.in.the.Last.Four.Seasons",
                   "Accounts.Receivable.Turnover","Average.Collection.Days",
                   "Cash.Total.Assets","Net.Income.to.Total.Assets","Equity.to.Liability")]
 
+new_df <- data[,c("Tax.rate..A.","Net.Value.Growth.Rate","Accounts.Receivable.Turnover",
+                  "Average.Collection.Days","Inventory.Turnover.Rate..times.","Cash.Flow.to.Liability")]
+
+new_df <- data[,c("Bankrupt.",'ROA.C..before.interest.and.depreciation.before.interest',
+                  'ROA.A..before.interest.and...after.tax',
+                  'ROA.B..before.interest.and.depreciation.after.tax',
+                  'Operating.Gross.Margin', 'Realized.Sales.Gross.Margin',
+                  'Cash.flow.rate', 'Tax.rate..A.', 'Net.Value.Per.Share..B.',
+                  'Net.Value.Per.Share..A.',  'Net.Value.Per.Share..C.',
+                  'Persistent.EPS.in.the.Last.Four.Seasons', 'Cash.Flow.Per.Share',
+                  'Operating.Profit.Per.Share..Yuan...',
+                  'Per.Share.Net.profit.before.tax..Yuan...', 'Debt.ratio..',
+                  'Net.worth.Assets', 'Operating.profit.Paid.in.capital',
+                  'Net.profit.before.tax.Paid.in.capital',
+                  'Operating.profit.per.person', 'Working.Capital.to.Total.Assets',
+                  'Quick.Assets.Total.Assets', 'Cash.Total.Assets',
+                  'Current.Liability.to.Assets', 'Operating.Funds.to.Liability',
+                  'Retained.Earnings.to.Total.Assets', 'Total.expense.Assets',
+                  'CFO.to.Assets', 'Current.Liability.to.Current.Assets',
+                  'Net.Income.to.Total.Assets', 'Gross.Profit.to.Sales')]
+
+
+#data_aumentada <- data_aumentada[,c("Bankrupt.","Persistent.EPS.in.the.Last.Four.Seasons",
+#                               "Total.debt.Total.net.worth","Total.Asset.Turnover",
+#                               "Accounts.Receivable.Turnover","Average.Collection.Days",
+#                               "Cash.Total.Assets","Net.Income.to.Total.Assets","Equity.to.Liability")]
+
+
+
 #Regresion logistica
 
   #Separando el conjunto de datos en test y train
 
-proporcion_prueba <- 0.3
-
+set.seed(123)
 indices <- createDataPartition(new_df$Bankrupt., p = 0.7, list = FALSE)
+conjunto_entrenamiento <- new_df[indices, ]
+conjunto_prueba <- new_df[-indices, ]
 
+# Ajustar el modelo de regresión logística
+modelo <- glm(Bankrupt. ~ ., data = conjunto_entrenamiento, family = "binomial")
 
-conjunto_entrenamiento <- new_df[indices,]
-conjunto_prueba <- new_df[-indices,]
+# Realizar predicciones en el conjunto de prueba
+predicciones <- predict(modelo, newdata = conjunto_prueba, type = "response")
 
-modelo <- glm(data$Bankrupt. ~ ., data = conjunto_entrenamiento, family = "binomial")
+# Convertir las predicciones en valores de clase (0 o 1)
+predicciones_clase <- ifelse(predicciones > 0.5, 1, 0)
 
-predicciones <- predict(modelo, newdata = conjunto_prueba)
-
-predicciones_clase <- ifelse(predicciones > 0.5, 1,0)
-
-matriz_confusion <- confusionMatrix(predicciones_clase, conjunto_prueba$Bankrupt.)
+# Calcular la matriz de confusión
+matriz_confusion <- confusionMatrix(factor(predicciones_clase), factor(conjunto_prueba$Bankrupt.))
 print(matriz_confusion)
 
+#SVM
+set.seed(101)
+y_train <- conjunto_entrenamiento$Bankrupt.
+X_train <- conjunto_entrenamiento[,-conjunto_entrenamiento$Bankrupt.]
+
+y_test <- conjunto_prueba$Bankrupt.
+y_test <- factor(y_test, levels = levels(y_train))
+X_test <- conjunto_prueba[,-conjunto_prueba$Bankrupt.]
+
+
+
+model <- svm(x = X_train, y = y_train)
+
+predictions <- predict(model,newdata = X_test)
+predictions <- factor(predictions, levels = levels(y_test))
+
+confusion <- confusionMatrix(data = predictions, reference = y_test)
+
+
+#Arboles de decisión
+
+model <- rpart(Bankrupt. ~ ., data  = conjunto_entrenamiento, method = "class")
+predictions <- predict(model, conjunto_prueba, type = "class")
+confusion_matriz_DT <- confusionMatrix(predictions,factor(conjunto_prueba$Bankrupt.))
+print(confusion_matriz_DT)
+
+
+#Random Forest
+model <- randomForest(Bankrupt. ~ ., data = conjunto_entrenamiento)
+predictions <- predict(model, conjunto_prueba type = "class")
+mc <- with(conjunto_entrenamiento, table(predictions,conjunto_prueba$Bankrupt.))
+
+
+
+#Prueba del modelo entranado con la data sin aumentar sobre data aumentada
+
+#predicciones_aumentada <- predict(modelo,newdata = data_aumentada, type = "response")
+#predicciones_aumentada_clase <- ifelse(predicciones_aumentada > 0.5, 1,0)
+#matriz_confusion_aumentada <- confusionMatrix(factor(predicciones_aumentada_clase), factor(data_aumentada$Bankrupt.))
+#print(matriz_confusion_aumentada)
 
 
 #relevant_variables <- c()
