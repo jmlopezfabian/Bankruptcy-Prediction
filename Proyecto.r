@@ -129,16 +129,18 @@ obtener_variables_significativas <- function(data){
   for (variable in names(data)){
     if(variable != "Bankrupt." & variable != "Net.Income.Flag"){
       p_value <- t.test(data[[variable]] ~ Bankrupt., data = data, conf.level = 0.99)$p.value  # Realizar la prueba t de Student y obtener el p-value
-      
+      cat("Intervalos de confianza de la variable: ",variable);
+      test <- t.test(data[[variable]], conf.level = 0.99)$conf.int  
+      print(test)
+      cat("\n")
       if (p_value < 0.01){
         variables_significativas <- c(variables_significativas, variable)  # Agregar el nombre de la variable a la lista de variables significativas
       }
     }
-    
   }
-  
   return(variables_significativas)  # Devolver la lista de nombres de variables significativas
 }
+
 
 
 #------Limpieza de datos------#
