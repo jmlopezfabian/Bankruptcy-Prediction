@@ -15,7 +15,7 @@ This is a Shiny application designed for predicting a company's bankruptcy risk 
 1. Clone the repositore:
 
     ```bash
-    git clone https://github.com/YourUsername/Bankruptcy-Prediction-App.git
+    git clone https://github.com/jmlopezfabian/Bankruptcy-Prediction.git
 
 2. Open Rstudio and navigate to the cloned directory
 
@@ -27,9 +27,6 @@ This is a Shiny application designed for predicting a company's bankruptcy risk 
 5. Run the app:
     - Open 'App/app.R' in RStudio.
     - Click the "Run App" button.
-
-6. Acces the app in your web browser:
-http://127.0.0.1:port
 
 ## Project Structure
 
